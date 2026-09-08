@@ -188,4 +188,4 @@ python data/airline/download.py
 
 **Saumil Savani**  
 BSc Information Technology · Technical University of Munich, Campus Heilbronn  
-📧 savani600@gmail.com
+📧 ssavani600@gmail.com
