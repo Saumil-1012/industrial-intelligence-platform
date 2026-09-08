@@ -1,0 +1,84 @@
+{
+  "module": "supply_chain",
+  "timestamp": "2026-09-07T14:44:42.496442",
+  "drift_threshold": 0.15,
+  "retrain_triggered": false,
+  "feature_drift": {
+    "overall_psi": 0.0427,
+    "drift_detected": false,
+    "drifted_features": [
+      "rolling_mean_7"
+    ],
+    "n_features_checked": 12,
+    "feature_scores": {
+      "lag_7": {
+        "psi": 0.1286,
+        "kl": 0.0839,
+        "status": "MODERATE"
+      },
+      "lag_14": {
+        "psi": 0.0199,
+        "kl": 0.0237,
+        "status": "STABLE"
+      },
+      "lag_28": {
+        "psi": 0.0229,
+        "kl": 0.0958,
+        "status": "STABLE"
+      },
+      "rolling_mean_7": {
+        "psi": 0.1862,
+        "kl": 0.1074,
+        "status": "MODERATE"
+      },
+      "rolling_std_7": {
+        "psi": 0.0391,
+        "kl": 0.0665,
+        "status": "STABLE"
+      },
+      "rolling_mean_28": {
+        "psi": 0.0139,
+        "kl": 0.0923,
+        "status": "STABLE"
+      },
+      "rolling_std_28": {
+        "psi": 0.0191,
+        "kl": 0.0824,
+        "status": "STABLE"
+      },
+      "dayofweek": {
+        "psi": 0.0102,
+        "kl": 0.0058,
+        "status": "STABLE"
+      },
+      "month": {
+        "psi": 0.0246,
+        "kl": 0.0131,
+        "status": "STABLE"
+      },
+      "is_weekend": {
+        "psi": 0.0,
+        "kl": 0.0001,
+        "status": "STABLE"
+      },
+      "dept_mean_sales": {
+        "psi": 0.0268,
+        "kl": 0.0301,
+        "status": "STABLE"
+      },
+      "store_mean_sales": {
+        "psi": 0.0208,
+        "kl": 0.0269,
+        "status": "STABLE"
+      }
+    }
+  },
+  "performance_drift": {},
+  "summary": {
+    "overall_psi": 0.0427,
+    "drifted_features": [
+      "rolling_mean_7"
+    ],
+    "retrain_needed": false
+  }
+}

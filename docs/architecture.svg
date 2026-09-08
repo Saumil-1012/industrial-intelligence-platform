@@ -1,0 +1,113 @@
+<svg viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" font-family="Inter, Segoe UI, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#64748b"/>
+    </marker>
+  </defs>
+  <rect width="900" height="620" fill="#0f172a" rx="12"/>
+  <text x="450" y="38" text-anchor="middle" fill="#f1f5f9" font-size="17" font-weight="700">Industrial Intelligence Platform — Architecture</text>
+  <!-- DATA SOURCES -->
+  <rect x="30" y="65" width="155" height="110" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+  <text x="108" y="86" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600" letter-spacing="1">DATA SOURCES</text>
+  <rect x="44" y="95" width="127" height="24" rx="5" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+  <text x="108" y="111" text-anchor="middle" fill="#7dd3fc" font-size="10">M5 Forecasting (42K series)</text>
+  <rect x="44" y="126" width="127" height="24" rx="5" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+  <text x="108" y="142" text-anchor="middle" fill="#7dd3fc" font-size="10">DOT Airline (20M flights)</text>
+  <text x="108" y="167" text-anchor="middle" fill="#64748b" font-size="9">OpenSky Network API</text>
+  <!-- VALIDATION -->
+  <rect x="215" y="65" width="145" height="110" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+  <text x="288" y="86" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600" letter-spacing="1">VALIDATION</text>
+  <rect x="228" y="95" width="120" height="24" rx="5" fill="#14532d" stroke="#16a34a" stroke-width="1"/>
+  <text x="288" y="111" text-anchor="middle" fill="#86efac" font-size="10">Great Expectations</text>
+  <text x="288" y="128" text-anchor="middle" fill="#64748b" font-size="9">Schema · Nulls · Ranges</text>
+  <text x="288" y="143" text-anchor="middle" fill="#64748b" font-size="9">Business rules · Fast-fail</text>
+  <text x="288" y="165" text-anchor="middle" fill="#64748b" font-size="9">13 supply + 8 airline checks</text>
+  <!-- FEATURE STORE -->
+  <rect x="390" y="65" width="145" height="110" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+  <text x="463" y="86" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600" letter-spacing="1">FEATURE STORE</text>
+  <rect x="403" y="95" width="120" height="24" rx="5" fill="#312e81" stroke="#6366f1" stroke-width="1"/>
+  <text x="463" y="111" text-anchor="middle" fill="#c7d2fe" font-size="10">Feast</text>
+  <text x="463" y="128" text-anchor="middle" fill="#64748b" font-size="9">5 Feature Views · Online/Offline</text>
+  <text x="463" y="143" text-anchor="middle" fill="#64748b" font-size="9">On-demand demand score</text>
+  <text x="463" y="162" text-anchor="middle" fill="#64748b" font-size="9">No train-serve skew</text>
+  <!-- Row 1 arrows -->
+  <line x1="185" y1="120" x2="213" y2="120" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="360" y1="120" x2="388" y2="120" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- SUPPLY CHAIN MODULE -->
+  <rect x="30" y="215" width="230" height="130" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+  <text x="145" y="235" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600" letter-spacing="1">SUPPLY CHAIN MODULE</text>
+  <rect x="44" y="244" width="102" height="22" rx="4" fill="#7c2d12" stroke="#ea580c" stroke-width="1"/>
+  <text x="95" y="259" text-anchor="middle" fill="#fed7aa" font-size="9.5">LightGBM Forecast</text>
+  <rect x="152" y="244" width="96" height="22" rx="4" fill="#7c2d12" stroke="#ea580c" stroke-width="1"/>
+  <text x="200" y="259" text-anchor="middle" fill="#fed7aa" font-size="9.5">Isolation Forest</text>
+  <text x="145" y="282" text-anchor="middle" fill="#64748b" font-size="9">Optuna · Walk-forward CV</text>
+  <text x="145" y="296" text-anchor="middle" fill="#64748b" font-size="9">P10 / P50 / P90 Quantile Regression</text>
+  <text x="145" y="310" text-anchor="middle" fill="#64748b" font-size="9">SHAP Waterfall · SPC Z-score</text>
+  <text x="145" y="328" text-anchor="middle" fill="#475569" font-size="8.5">42,840 time series · Lag/rolling/calendar features</text>
+  <!-- AIRLINE MODULE -->
+  <rect x="280" y="215" width="260" height="130" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+  <text x="410" y="235" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600" letter-spacing="1">AIRLINE MODULE</text>
+  <rect x="293" y="244" width="100" height="22" rx="4" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+  <text x="343" y="259" text-anchor="middle" fill="#bfdbfe" font-size="9.5">XGBoost Classifier</text>
+  <rect x="400" y="244" width="128" height="22" rx="4" fill="#1e3a5f" stroke="#3b82f6" stroke-width="1"/>
+  <text x="464" y="259" text-anchor="middle" fill="#bfdbfe" font-size="9.5">NetworkX Cascade Graph</text>
+  <text x="410" y="282" text-anchor="middle" fill="#64748b" font-size="9">Platt calibration · Multi-label root cause</text>
+  <text x="410" y="296" text-anchor="middle" fill="#64748b" font-size="9">5 DOT delay categories · SHAP per flight</text>
+  <text x="410" y="310" text-anchor="middle" fill="#64748b" font-size="9">Aircraft rotation · Airport congestion score</text>
+  <text x="410" y="328" text-anchor="middle" fill="#475569" font-size="8.5">20M+ records · Directed graph delay propagation</text>
+  <!-- Arrows down from feature store to modules -->
+  <line x1="145" y1="175" x2="145" y2="213" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="463" y1="175" x2="410" y2="213" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- MLOPS INFRASTRUCTURE -->
+  <rect x="30" y="385" width="510" height="80" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+  <text x="285" y="405" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600" letter-spacing="1">SHARED MLOPS INFRASTRUCTURE</text>
+  <rect x="44" y="413" width="108" height="36" rx="5" fill="#0f172a" stroke="#6366f1" stroke-width="1"/>
+  <text x="98" y="428" text-anchor="middle" fill="#c7d2fe" font-size="9.5" font-weight="600">MLflow</text>
+  <text x="98" y="441" text-anchor="middle" fill="#64748b" font-size="8.5">Experiment tracking</text>
+  <rect x="161" y="413" width="108" height="36" rx="5" fill="#0f172a" stroke="#06b6d4" stroke-width="1"/>
+  <text x="215" y="428" text-anchor="middle" fill="#a5f3fc" font-size="9.5" font-weight="600">Airflow</text>
+  <text x="215" y="441" text-anchor="middle" fill="#64748b" font-size="8.5">Weekly retraining DAGs</text>
+  <rect x="278" y="413" width="108" height="36" rx="5" fill="#0f172a" stroke="#f59e0b" stroke-width="1"/>
+  <text x="332" y="428" text-anchor="middle" fill="#fde68a" font-size="9.5" font-weight="600">Evidently AI</text>
+  <text x="332" y="441" text-anchor="middle" fill="#64748b" font-size="8.5">PSI drift monitoring</text>
+  <rect x="395" y="413" width="130" height="36" rx="5" fill="#0f172a" stroke="#16a34a" stroke-width="1"/>
+  <text x="460" y="428" text-anchor="middle" fill="#86efac" font-size="9.5" font-weight="600">Great Expectations</text>
+  <text x="460" y="441" text-anchor="middle" fill="#64748b" font-size="8.5">Data quality pipeline</text>
+  <!-- Arrows down to mlops -->
+  <line x1="145" y1="345" x2="145" y2="383" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="410" y1="345" x2="410" y2="383" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- SERVING LAYER -->
+  <rect x="580" y="215" width="290" height="250" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+  <text x="725" y="235" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600" letter-spacing="1">SERVING LAYER</text>
+  <rect x="593" y="244" width="264" height="60" rx="5" fill="#0f172a" stroke="#10b981" stroke-width="1"/>
+  <text x="725" y="263" text-anchor="middle" fill="#6ee7b7" font-size="10" font-weight="600">FastAPI</text>
+  <text x="637" y="280" text-anchor="middle" fill="#64748b" font-size="8.5">/supply/forecast</text>
+  <text x="637" y="292" text-anchor="middle" fill="#64748b" font-size="8.5">/supply/anomaly</text>
+  <text x="725" y="280" text-anchor="middle" fill="#64748b" font-size="8.5">/airline/delay</text>
+  <text x="725" y="292" text-anchor="middle" fill="#64748b" font-size="8.5">/airline/rootcause</text>
+  <text x="813" y="280" text-anchor="middle" fill="#64748b" font-size="8.5">/airline/cascade</text>
+  <text x="813" y="292" text-anchor="middle" fill="#64748b" font-size="8.5">/*/drift</text>
+  <rect x="593" y="314" width="264" height="70" rx="5" fill="#0f172a" stroke="#f43f5e" stroke-width="1"/>
+  <text x="725" y="333" text-anchor="middle" fill="#fda4af" font-size="10" font-weight="600">Streamlit Dashboard</text>
+  <text x="725" y="350" text-anchor="middle" fill="#64748b" font-size="8.5">Forecast chart · SHAP waterfall · Anomaly feed</text>
+  <text x="725" y="363" text-anchor="middle" fill="#64748b" font-size="8.5">Delay gauge · Root cause pie · Cascade tree</text>
+  <text x="725" y="376" text-anchor="middle" fill="#64748b" font-size="8.5">Drift timeline · Model performance tracker</text>
+  <rect x="593" y="394" width="264" height="40" rx="5" fill="#0f172a" stroke="#2563eb" stroke-width="1"/>
+  <text x="725" y="411" text-anchor="middle" fill="#93c5fd" font-size="9.5">Docker Compose · GitHub Actions CI/CD</text>
+  <text x="725" y="426" text-anchor="middle" fill="#475569" font-size="8.5">API · Dashboard · MLflow · Airflow · Postgres</text>
+  <!-- Arrows to serving -->
+  <line x1="540" y1="280" x2="578" y2="280" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="540" y1="340" x2="578" y2="340" stroke="#64748b" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <!-- Drift feedback loop -->
+  <path d="M 725 465 Q 725 510 560 510 Q 215 510 215 467" stroke="#f59e0b" stroke-width="1.2" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <text x="470" y="524" text-anchor="middle" fill="#f59e0b" font-size="8.5">PSI &gt; 0.15 → auto-trigger retrain DAG</text>
+  <!-- LEGEND -->
+  <rect x="580" y="65" width="290" height="130" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1.2"/>
+  <text x="725" y="85" text-anchor="middle" fill="#94a3b8" font-size="10" font-weight="600" letter-spacing="1">TECH STACK</text>
+  <circle cx="600" cy="100" r="4" fill="#ea580c"/><text x="610" y="104" fill="#cbd5e1" font-size="9">LightGBM · XGBoost · Isolation Forest</text>
+  <circle cx="600" cy="117" r="4" fill="#6366f1"/><text x="610" y="121" fill="#cbd5e1" font-size="9">Feast · Optuna · SHAP</text>
+  <circle cx="600" cy="134" r="4" fill="#06b6d4"/><text x="610" y="138" fill="#cbd5e1" font-size="9">Airflow · MLflow · Evidently AI</text>
+  <circle cx="600" cy="151" r="4" fill="#10b981"/><text x="610" y="155" fill="#cbd5e1" font-size="9">FastAPI · Streamlit · Plotly</text>
+  <circle cx="600" cy="168" r="4" fill="#2563eb"/><text x="610" y="172" fill="#cbd5e1" font-size="9">Docker · GitHub Actions · Postgres</text>
+  <circle cx="600" cy="185" r="4" fill="#3b82f6"/><text x="610" y="189" fill="#cbd5e1" font-size="9">NetworkX · Great Expectations</text>
+</svg>

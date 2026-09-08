@@ -1,0 +1,48 @@
+# Great Expectations config
+config_version: 3.0
+
+datasources:
+  supply_chain_pandas:
+    class_name: Datasource
+    module_name: great_expectations.datasource
+    execution_engine:
+      class_name: PandasExecutionEngine
+    data_connectors:
+      supply_chain_connector:
+        class_name: InferredAssetFilesystemDataConnector
+        base_directory: ../data/supply_chain
+        default_regex:
+          pattern: (.*)\.csv
+          group_names: [data_asset_name]
+
+stores:
+  expectations_store:
+    class_name: ExpectationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: great_expectations/expectations/
+
+  validations_store:
+    class_name: ValidationsStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: great_expectations/validations/
+
+  checkpoint_store:
+    class_name: CheckpointStore
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: great_expectations/checkpoints/
+
+expectations_store_name: expectations_store
+validations_store_name: validations_store
+checkpoint_store_name: checkpoint_store
+
+data_docs_sites:
+  local_site:
+    class_name: SiteBuilder
+    store_backend:
+      class_name: TupleFilesystemStoreBackend
+      base_directory: great_expectations/data_docs/local_site/
+    site_index_builder:
+      class_name: DefaultSiteIndexBuilder

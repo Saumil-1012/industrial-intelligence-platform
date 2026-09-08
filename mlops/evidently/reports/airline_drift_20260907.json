@@ -1,0 +1,67 @@
+{
+  "module": "airline",
+  "timestamp": "2026-09-07T14:44:42.508491",
+  "drift_threshold": 0.15,
+  "retrain_triggered": true,
+  "feature_drift": {
+    "overall_psi": 1.8812,
+    "drift_detected": true,
+    "drifted_features": [
+      "rotation_time_min",
+      "congestion_tier",
+      "route_mean_delay",
+      "carrier_delay_rate",
+      "weather_severity"
+    ],
+    "n_features_checked": 7,
+    "feature_scores": {
+      "hour_of_day": {
+        "psi": 0.0191,
+        "kl": 0.023,
+        "status": "STABLE"
+      },
+      "day_of_week": {
+        "psi": 0.0019,
+        "kl": 0.001,
+        "status": "STABLE"
+      },
+      "rotation_time_min": {
+        "psi": 0.7376,
+        "kl": 0.4438,
+        "status": "HIGH"
+      },
+      "congestion_tier": {
+        "psi": 7.2967,
+        "kl": 8.5148,
+        "status": "HIGH"
+      },
+      "route_mean_delay": {
+        "psi": 0.2631,
+        "kl": 0.1655,
+        "status": "HIGH"
+      },
+      "carrier_delay_rate": {
+        "psi": 1.5192,
+        "kl": 1.2151,
+        "status": "HIGH"
+      },
+      "weather_severity": {
+        "psi": 3.3308,
+        "kl": 2.1455,
+        "status": "HIGH"
+      }
+    }
+  },
+  "performance_drift": {},
+  "summary": {
+    "overall_psi": 1.8812,
+    "drifted_features": [
+      "rotation_time_min",
+      "congestion_tier",
+      "route_mean_delay",
+      "carrier_delay_rate",
+      "weather_severity"
+    ],
+    "retrain_needed": true
+  }
+}

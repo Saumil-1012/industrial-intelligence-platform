@@ -1,0 +1,38 @@
+
+# Data (too large for git — use DVC or download scripts)
+# Env
+# IDE
+# Logs
+# MLflow
+# Models (tracked via MLflow)
+# Notebooks checkpoints
+# OS
+# Python
+*.egg-info/
+*.env
+*.joblib
+*.log
+*.pkl
+*.py[cod]
+*.swp
+.DS_Store
+.eggs/
+.env
+.idea/
+.ipynb_checkpoints/
+.venv/
+.vscode/
+Thumbs.db
+__pycache__/
+build/
+data/airline/*.csv
+data/airline/*.zip
+data/supply_chain/*.csv
+data/supply_chain/*.zip
+dist/
+env/
+logs/
+mlflow.db
+mlruns/
+models/
+venv/

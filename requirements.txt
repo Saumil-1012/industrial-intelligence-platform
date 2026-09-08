@@ -1,0 +1,36 @@
+# Core ML
+lightgbm==4.3.0
+xgboost==2.0.3
+scikit-learn==1.4.2
+optuna==3.6.1
+shap==0.45.0
+
+# Data
+pandas==2.2.2
+numpy==1.26.4
+kaggle==1.6.14
+pyarrow==16.1.0       # required for parquet + Feast
+
+# MLOps
+mlflow==2.13.0
+
+# Week 2: Data Validation + Feature Store
+great-expectations==0.18.19
+feast==0.40.0
+
+# API
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+pydantic==2.7.1
+
+# Dashboard
+streamlit==1.35.0
+plotly==5.22.0
+
+# Anomaly Detection
+scipy==1.13.0
+
+# Utils
+python-dotenv==1.0.1
+requests==2.32.2
+joblib==1.4.2
