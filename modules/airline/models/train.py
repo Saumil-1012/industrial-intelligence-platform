@@ -1,9 +1,17 @@
 """
 Airline Delay Prediction — XGBoost Training
+
+Fixes applied:
+- Data leakage: route/carrier stats computed on train set only
+- Class imbalance: scale_pos_weight added
+- Recall threshold: 0.5 -> 0.35
+- Model versioning: timestamp saved
+- Reproducibility: random_state=42
 """
 
 import logging
 import warnings
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -29,6 +37,8 @@ from modules.airline.features.feature_engineering import (
     AIRLINE_FEATURE_COLS,
     DELAY_CAUSES,
     build_airline_features,
+    add_route_historical_features,
+    add_carrier_features,
 )
 
 warnings.filterwarnings("ignore")
@@ -36,20 +46,71 @@ optuna.logging.set_verbosity(optuna.logging.WARNING)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-MODELS_DIR = Path("models") / "airline"
+MODELS_DIR   = Path("models") / "airline"
+THRESHOLD    = 0.35  # tuned for recall — catching delays > false alarms
 
 
 def get_available_features(df: pd.DataFrame) -> list[str]:
     return [f for f in AIRLINE_FEATURE_COLS if f in df.columns]
 
 
-def time_based_split(df: pd.DataFrame, val_ratio: float = 0.15):
+def leakage_free_split(df: pd.DataFrame, val_ratio: float = 0.15):
+    """
+    Split by time FIRST, then compute route/carrier stats on train only.
+    Joins stats to val via merge to prevent data leakage.
+    """
     df = df.sort_values("flight_date")
-    cutoff = int(len(df) * (1 - val_ratio))
-    return df.iloc[:cutoff].copy(), df.iloc[cutoff:].copy()
+    cutoff   = int(len(df) * (1 - val_ratio))
+    train_df = df.iloc[:cutoff].copy()
+    val_df   = df.iloc[cutoff:].copy()
+
+    # Drop leaky columns if already computed on full dataset
+    leaky_cols = [
+        "route_mean_delay", "route_std_delay",
+        "carrier_delay_rate", "carrier_mean_delay",
+    ]
+    for col in leaky_cols:
+        for d in [train_df, val_df]:
+            if col in d.columns:
+                d.drop(columns=[col], inplace=True)
+
+    # Recompute on train only
+    train_df = add_route_historical_features(train_df)
+    train_df = add_carrier_features(train_df)
+
+    # Compute train-only stats to join to val
+    route_stats = (
+        train_df.groupby(["origin", "dest"])[["route_mean_delay", "route_std_delay"]]
+        .mean()
+        .reset_index()
+    )
+    carrier_stats = (
+        train_df.groupby("carrier")[["carrier_delay_rate", "carrier_mean_delay"]]
+        .mean()
+        .reset_index()
+    )
+
+    # Join to val — unseen routes get train mean
+    val_df = val_df.merge(route_stats,   on=["origin", "dest"], how="left")
+    val_df = val_df.merge(carrier_stats, on="carrier",           how="left")
+
+    for col in ["route_mean_delay", "route_std_delay",
+                "carrier_delay_rate", "carrier_mean_delay"]:
+        val_df[col] = val_df[col].fillna(train_df[col].mean())
+
+    logger.info(f"Leakage-free split — Train: {len(train_df):,} | Val: {len(val_df):,}")
+    return train_df, val_df
 
 
 def tune_classifier(X_train, y_train, X_val, y_val, n_trials=30) -> dict:
+    """Optuna tuning with class imbalance correction."""
+
+    # Compute scale_pos_weight from training labels
+    neg = int((y_train == 0).sum())
+    pos = int((y_train == 1).sum())
+    spw = round(neg / pos, 2)
+    logger.info(f"Class ratio — Negative: {neg:,} | Positive: {pos:,} | scale_pos_weight: {spw}")
+
     def objective(trial):
         params = {
             "n_estimators":          trial.suggest_int("n_estimators", 100, 800),
@@ -60,8 +121,11 @@ def tune_classifier(X_train, y_train, X_val, y_val, n_trials=30) -> dict:
             "colsample_bytree":      trial.suggest_float("colsample_bytree", 0.5, 1.0),
             "reg_alpha":             trial.suggest_float("reg_alpha", 1e-8, 10.0, log=True),
             "reg_lambda":            trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
+            "scale_pos_weight":      spw,
             "early_stopping_rounds": 30,
             "eval_metric":           "logloss",
+            "random_state":          42,
+            "seed":                  42,
             "verbosity":             0,
         }
         model = xgb.XGBClassifier(**params)
@@ -72,20 +136,27 @@ def tune_classifier(X_train, y_train, X_val, y_val, n_trials=30) -> dict:
     study = optuna.create_study(direction="minimize")
     study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
     logger.info(f"Best AUC: {-study.best_value:.4f}")
-    return study.best_params
+    return {**study.best_params, "scale_pos_weight": spw}
 
 
 def train_delay_classifier(X_train, y_train, X_val, y_val, best_params) -> dict:
-    """Returns plain dict — always picklable."""
+    """Train XGBoost + Platt calibration. Returns plain dict for pickling."""
+    neg = int((y_train == 0).sum())
+    pos = int((y_train == 1).sum())
+
     params = {
         **best_params,
+        "scale_pos_weight":      round(neg / pos, 2),
         "early_stopping_rounds": 50,
         "eval_metric":           "logloss",
+        "random_state":          42,
+        "seed":                  42,
         "verbosity":             0,
     }
     base_model = xgb.XGBClassifier(**params)
     base_model.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=False)
 
+    # Platt calibration on validation scores
     raw_scores = base_model.predict_proba(X_val)[:, 1].reshape(-1, 1)
     platt = LogisticRegression()
     platt.fit(raw_scores, y_val)
@@ -97,9 +168,12 @@ def train_delay_classifier(X_train, y_train, X_val, y_val, best_params) -> dict:
 def train_delay_regressor(X_train, y_train, X_val, y_val, best_params) -> xgb.XGBRegressor:
     params = {
         **{k: v for k, v in best_params.items()
-           if k not in ["use_label_encoder", "eval_metric", "early_stopping_rounds"]},
+           if k not in ["use_label_encoder", "eval_metric",
+                        "early_stopping_rounds", "scale_pos_weight"]},
         "objective":             "reg:squarederror",
         "early_stopping_rounds": 50,
+        "random_state":          42,
+        "seed":                  42,
         "verbosity":             0,
     }
     model = xgb.XGBRegressor(**params)
@@ -118,8 +192,8 @@ def train_root_cause_classifier(df, feature_cols):
     X = df[feature_cols]
 
     delayed_mask = df.get("is_delayed", pd.Series(np.ones(len(df)))) == 1
-    X_delayed = X[delayed_mask]
-    Y_delayed = Y[delayed_mask]
+    X_delayed    = X[delayed_mask]
+    Y_delayed    = Y[delayed_mask]
 
     if len(X_delayed) < 100:
         logger.warning("Too few delayed samples for root cause model")
@@ -127,7 +201,7 @@ def train_root_cause_classifier(df, feature_cols):
 
     base = xgb.XGBClassifier(
         n_estimators=200, max_depth=5, learning_rate=0.1,
-        eval_metric="logloss", verbosity=0,
+        eval_metric="logloss", random_state=42, verbosity=0,
     )
     model = MultiOutputClassifier(base, n_jobs=-1)
     model.fit(X_delayed, Y_delayed)
@@ -136,15 +210,17 @@ def train_root_cause_classifier(df, feature_cols):
 
 
 def evaluate_classifier(model, X, y) -> dict:
+    """Evaluate using tuned threshold (0.35) for better recall."""
     raw         = model["base"].predict_proba(X)[:, 1].reshape(-1, 1)
     preds_proba = model["platt"].predict_proba(raw)[:, 1]
-    preds       = (preds_proba >= 0.5).astype(int)
+    preds       = (preds_proba >= THRESHOLD).astype(int)
     return {
         "AUC":       round(roc_auc_score(y, preds_proba), 4),
         "F1":        round(f1_score(y, preds, zero_division=0), 4),
         "Precision": round(precision_score(y, preds, zero_division=0), 4),
         "Recall":    round(recall_score(y, preds, zero_division=0), 4),
         "AP":        round(average_precision_score(y, preds_proba), 4),
+        "threshold": THRESHOLD,
     }
 
 
@@ -166,11 +242,12 @@ def train_pipeline(
 
     logger.info("Building airline features...")
     df = build_airline_features(years=years, sample_frac=sample_frac)
-    feature_cols = get_available_features(df)
-    logger.info(f"Using {len(feature_cols)} features")
 
-    train_df, val_df = time_based_split(df)
-    logger.info(f"Train: {len(train_df):,} | Val: {len(val_df):,}")
+    # Leakage-free split
+    train_df, val_df = leakage_free_split(df)
+
+    feature_cols = get_available_features(train_df)
+    logger.info(f"Using {len(feature_cols)} features")
 
     X_train     = train_df[feature_cols]
     y_cls_train = train_df["is_delayed"]
@@ -180,11 +257,12 @@ def train_pipeline(
     y_reg_val   = val_df["delay_minutes"]
 
     with mlflow.start_run(run_name="airline_xgboost"):
-        mlflow.log_param("sample_frac", sample_frac)
-        mlflow.log_param("n_features",  len(feature_cols))
-        mlflow.log_param("train_size",  len(train_df))
-        mlflow.log_param("val_size",    len(val_df))
-        mlflow.log_param("delay_rate",  round(float(y_cls_train.mean()), 3))
+        mlflow.log_param("sample_frac",  sample_frac)
+        mlflow.log_param("n_features",   len(feature_cols))
+        mlflow.log_param("train_size",   len(train_df))
+        mlflow.log_param("val_size",     len(val_df))
+        mlflow.log_param("delay_rate",   round(float(y_cls_train.mean()), 3))
+        mlflow.log_param("threshold",    THRESHOLD)
 
         logger.info("Tuning classifier...")
         best_params = tune_classifier(X_train, y_cls_train, X_val, y_cls_val, n_trials)
@@ -207,14 +285,21 @@ def train_pipeline(
         logger.info(f"Classifier metrics: {cls_metrics}")
         logger.info(f"Regressor metrics:  {reg_metrics}")
 
-        MODELS_DIR.mkdir(parents=True, exist_ok=True)
-        joblib.dump(classifier,   MODELS_DIR / "delay_classifier.pkl")
-        joblib.dump(regressor,    MODELS_DIR / "delay_regressor.pkl")
-        joblib.dump(feature_cols, MODELS_DIR / "feature_cols.pkl")
-        if root_cause_model:
-            joblib.dump(root_cause_model, MODELS_DIR / "root_cause_model.pkl")
-            joblib.dump(cause_cols,       MODELS_DIR / "cause_cols.pkl")
+        # Save with version timestamp + latest
+        version     = datetime.now().strftime("%Y%m%d_%H%M")
+        version_dir = MODELS_DIR / f"v_{version}"
+        version_dir.mkdir(parents=True, exist_ok=True)
 
+        for dest in [MODELS_DIR, version_dir]:
+            joblib.dump(classifier,   dest / "delay_classifier.pkl")
+            joblib.dump(regressor,    dest / "delay_regressor.pkl")
+            joblib.dump(feature_cols, dest / "feature_cols.pkl")
+            if root_cause_model:
+                joblib.dump(root_cause_model, dest / "root_cause_model.pkl")
+                joblib.dump(cause_cols,       dest / "cause_cols.pkl")
+
+        logger.info(f"Models saved — version: v_{version}")
+        mlflow.log_param("model_version", version)
         mlflow.xgboost.log_model(regressor, "delay_regressor")
         logger.info(f"MLflow run_id: {mlflow.active_run().info.run_id}")
 
