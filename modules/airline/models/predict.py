@@ -1,5 +1,10 @@
 """
 Airline — Inference Module
+
+Fixes applied:
+- Threshold changed from 0.5 to 0.35 (better recall)
+- feature_importance replaces shap_top5 (honest naming)
+- Uses dict-based classifier (no pickling issues)
 """
 
 import logging
@@ -11,6 +16,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 MODELS_DIR = Path("models") / "airline"
+THRESHOLD  = 0.35  # matches train.py — tuned for recall
 
 CAUSE_LABELS = {
     "carrier_delay":       "Carrier",
@@ -37,7 +43,9 @@ def load_models() -> dict:
         else:
             logger.warning(f"Model not found: {path}")
     if not models:
-        raise FileNotFoundError(f"No airline models at {MODELS_DIR}. Run train.py first.")
+        raise FileNotFoundError(
+            f"No airline models at {MODELS_DIR}. Run train.py first."
+        )
     return models
 
 
@@ -51,26 +59,36 @@ def predict_delay(features: pd.DataFrame, models: dict) -> dict:
 
     X = features[feature_cols]
 
+    # Calibrated probability via Platt scaling
     raw           = clf["base"].predict_proba(X)[:, 1].reshape(-1, 1)
     delay_prob    = float(clf["platt"].predict_proba(raw)[0, 1])
     delay_minutes = float(max(0, reg.predict(X)[0])) if reg else 0.0
 
-    shap_explanation = {}
+    # Feature importance (honest naming — not SHAP)
+    feature_importance = {}
     try:
         fi    = clf["base"].feature_importances_
         pairs = sorted(zip(feature_cols, fi), key=lambda x: x[1], reverse=True)[:5]
         total = sum(v for _, v in pairs) + 1e-9
-        shap_explanation = {feat: round(float(val / total), 4) for feat, val in pairs}
+        feature_importance = {
+            feat: round(float(val / total), 4) for feat, val in pairs
+        }
     except Exception as e:
         logger.warning(f"Feature importance failed: {e}")
 
-    risk = "HIGH" if delay_prob >= 0.7 else "MEDIUM" if delay_prob >= 0.4 else "LOW"
+    # Risk level aligned with tuned threshold
+    risk = (
+        "HIGH"   if delay_prob >= 0.65 else
+        "MEDIUM" if delay_prob >= THRESHOLD else
+        "LOW"
+    )
 
     return {
         "delay_probability":  round(delay_prob, 4),
         "delay_minutes_pred": round(delay_minutes, 1),
         "risk_level":         risk,
-        "shap_top5":          shap_explanation,
+        "feature_importance": feature_importance,
+        "threshold_used":     THRESHOLD,
         "mode":               "model",
     }
 
@@ -129,11 +147,14 @@ def _demo_delay_prediction() -> dict:
         "delay_probability":  0.72,
         "delay_minutes_pred": 34.5,
         "risk_level":         "HIGH",
-        "shap_top5": {
-            "rotation_risk": 0.31, "weather_severity": 0.22,
-            "is_holiday_week": 0.18, "congestion_tier": 0.14,
+        "feature_importance": {
+            "rotation_risk":      0.31,
+            "weather_severity":   0.22,
+            "is_holiday_week":    0.18,
+            "congestion_tier":    0.14,
             "carrier_delay_rate": 0.11,
         },
+        "threshold_used": THRESHOLD,
         "mode": "demo",
     }
 
