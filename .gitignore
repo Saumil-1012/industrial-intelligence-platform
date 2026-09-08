@@ -34,5 +34,6 @@ env/
 logs/
 mlflow.db
 mlruns/
-models/
+models/airline/*.pkl
+models/supply_chain/*.pkl
 venv/
